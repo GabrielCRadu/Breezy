@@ -201,6 +201,7 @@ void loop() {
 
   TimpActual = millis();
   if (TimpActual - TimpAnterior >= TimpRefresh || ActualizareMeniu) {//Bucla se ruleaza o data pe secunda
+    ActualizareMeniu = false;
     TimpAnterior = millis();
 
     //SenzorMQ2();     //Cheama bucla SenzorMQ2
@@ -474,9 +475,6 @@ void loop() {
     key[2].drawButton();                               //Afiseaza butonul"Minim"
     key[3].drawButton();                               //Afiseaza butonul"Maxim"
     key[4].drawButton();                               //Afiseaza butonul"Setari"
-    tft.fillRoundRect(5, 10, 100, 40, 10, TFT_WHITE);  //x, y, w, h, r, color
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.drawString("Meniu1", 15, 20, 4);
   }
 
   void Meniu2() {
@@ -485,9 +483,6 @@ void loop() {
     key[2].drawButton(true);                               //Afiseaza butonul"Minim"
     key[3].drawButton();                               //Afiseaza butonul"Maxim"
     key[4].drawButton();                               //Afiseaza butonul"Setari"
-    tft.fillRoundRect(5, 10, 100, 40, 10, TFT_WHITE);  //x, y, w, h, r, color
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.drawString("Minime", 15, 20, 4);
   }
 
   void Meniu3() {
@@ -496,18 +491,13 @@ void loop() {
     key[2].drawButton();                               //Afiseaza butonul"Minim"
     key[3].drawButton(true);                               //Afiseaza butonul"Maxim"
     key[4].drawButton();                               //Afiseaza butonul"Setari"
-    tft.fillRoundRect(5, 10, 100, 40, 10, TFT_WHITE);  //x, y, w, h, r, color
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.drawString("Maxime", 15, 20, 4);
   }
 
   void Meniu4() {
 
     tft.fillScreen(TFT_BLACK);
-    key[1].drawButton();                               //Afiseaza butonul"Home"
-    key[2].drawButton();                               //Afiseaza butonul"Minim"
+    key[1].drawButton();                           //Afiseaza butonul"Home"
+    key[2].drawButton();                           //Afiseaza butonul"Minim"
     key[3].drawButton();                           //Afiseaza butonul"Maxim"
-    key[4].drawButton(true);                               //Afiseaza butonul"Setari"tft.fillRoundRect(5, 10, 100, 40, 10, TFT_WHITE);  //x, y, w, h, r, color
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.drawString("Setari", 15, 20, 4);
+    key[4].drawButton(true);                       //Afiseaza butonul"Setari"
   }
