@@ -39,6 +39,7 @@ bool BuzzerOn;
 #include "Adafruit_BME280.h"
 Adafruit_BME280 bme;  //foloseste I2C
 float Temperatura, Umiditate, Presiune;
+int LimitaT = 30, LimitaU = 65;
 float tmax, umax, pmax;                       //Variabile ce contin cea mai MARE valoare inregistrata a temperaturii, umiditatii si presiunii atmosferice
 float tmin = 100, umin = 100, pmin = 1500;    //Variabile ce contin cea mai MICA valoare inregistrata a temperaturii, umiditatii si presiunii atmosferice(se seteaza valori initiale)
 //BME280 - Temperatura, Umiditate, Presiune atmosferica//
@@ -90,10 +91,16 @@ int16_t w;
 
 bool ActualizareMeniu;                        //Folosita pentru actualizarea imediata a ecranului
 int Menu = 1;                                 //Variabila ce contine valoarea numerica corespunzatoare meniului afisat(se seteaza initial la 1, ca la pornire sa se afiseze meniul "HOME")
+int VariabilaSelectata = 1;
 
 //Variabile pt refresh valori ecran//
-unsigned long TimpAnterior = 0;               //Variabila folosita pentru stocarea timpului in milisecunde la care s-a intrat ultima data in bucla de o secunda
-unsigned int TimpRefresh = 1000;              //Variabila ce stocheaza durata in milisecunde la care se face refresh valorilor afisate in meniurile "HOME", "MINIM", "MAXIME" (este setata la 1000 de milisecunde = 1 secunda)
+unsigned long TimpAnteriorSec = 0;            //Variabila folosita pentru stocarea timpului in milisecunde la care s-a intrat ultima data in bucla de o secunda
+unsigned long TimpAnteriorMin = 0;            //Variabila folosita pentru stocarea timpului in milisecunde la care s-a intrat ultima data in bucla de un minut
+unsigned int RefreshSecunda = 1000;           //Variabila ce stocheaza durata in milisecunde la care se face refresh valorilor afisate in meniurile "HOME", "MINIM", "MAXIME" (este setata la 1000 de milisecunde = 1 secunda)
+unsigned int RefreshMinut = 60000;            //Variabila ce stocheaza durata in milisecunde la care se face refresh ceasului (este setata la 60000 de milisecunde = 1 minut)
+int Ore = 0;                         //Variabila ce stocheaza ora
+int Minute = 0;                      //Variabila ce stocheaza minutul
+
 //Variabile pt refresh valori ecran//
 
 
@@ -137,7 +144,14 @@ void setup() {
   key[3].drawButton(); 
 
   key[4].initButtonUL(&tft, 361, 255, 115, 60, TFT_WHITE, TFT_WHITE, TFT_BLACK, "Setari", TextSize);
-  key[4].drawButton();    
+  key[4].drawButton();  
+
+  key[5].initButtonUL(&tft, 5, 115, 50, 50, TFT_WHITE, TFT_WHITE, TFT_BLACK, "-", TextSize);
+  key[6].initButtonUL(&tft, 425, 115, 50, 50, TFT_WHITE, TFT_WHITE, TFT_BLACK, "+", TextSize);
+
+  key[7].initButtonUL(&tft, 5, 175, 50, 50, TFT_WHITE, TFT_WHITE, TFT_BLACK, "<", TextSize);
+  key[8].initButtonUL(&tft, 425, 175, 50, 50, TFT_WHITE, TFT_WHITE, TFT_BLACK, ">", TextSize);
+
   //tft.pushImage(280, 275, 40, 40, CogWheel);                                                    //Afisare iconita Setari
 
   //BME280//
@@ -221,16 +235,40 @@ void loop() {
   }
   ButoaneFizice();                                                        //Verifica apasarea butoanelor fizice
 
-  if (millis() - TimpAnterior >= TimpRefresh || ActualizareMeniu) {       //Bucla se ruleaza o data pe secunda sau daca rularea este impusa fortata de ActualizareMeniu
-    ActualizareMeniu = false;                                             //ActualizareMeniu se pune pe fals ca sa nu se intre inca o data in cazul in care ActualizareMeniu forteaza intrarea in bucla
-    TimpAnterior = millis();                                              //Se actualizeaza valoarea contorului astfel incat se va intra in bucla doar peste o secunda
+  if (millis() - TimpAnteriorMin >= RefreshMinut){                        //Bucla se ruleaza o data pe minut
+      TimpAnteriorMin = millis();                                         //Se actualizeaza valoarea contorului astfel incat se va intra in bucla doar peste un minut
+      Minute++;                                                           //Se incrementeaza minutele
+        if(Minute>=60)                                                    //Cand se ajunge la 60 de minute se incrementeaza ora si se pun minutele pe 0 din nou
+        {
+          Ore++;
+          Minute=0;                                                 
+        }
+        if(Ore>=24)                                                       //Cand ora ajunge la 24 se reseteaza la 0 si se sterge portiunea de ecran
+        {
+          Ore=0;            
+        }                                            
+  }
 
-    SenzorMQ2();                                                          //Cheama bucla SenzorMQ2    // Se citesc
-    SenzorBME280();                                                       //Cheama bucla BME280       // valorile.
+  if (millis() - TimpAnteriorSec >= RefreshSecunda || ActualizareMeniu) {       //Bucla se ruleaza o data pe secunda sau daca rularea este impusa fortata de ActualizareMeniu
+    ActualizareMeniu = false;                                                   //ActualizareMeniu se pune pe fals ca sa nu se intre inca o data in cazul in care ActualizareMeniu forteaza intrarea in bucla
+    TimpAnteriorSec = millis();                                                 //Se actualizeaza valoarea contorului astfel incat se va intra in bucla doar peste o secunda
 
-    if (BuzzerOn) BuzzerOn = false;                                       // Se inverseazaza o data pe secunda starea variabilei ce determina buzzerul sa sune, 
-    else BuzzerOn = true;                                                 //                    ca sa ceeeze un efect sonor de clipire.
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
+    tft.fillRect(0, 5, 60, 30, TFT_BLACK);
+    tft.textdatum = TR_DATUM;
+    tft.drawNumber(Ore,30,5);                                                   //Se afiseaza in coltul de sus al ecranului ora
+    tft.textdatum = TL_DATUM;
+    tft.drawString(":", 30, 5);                                                 //Se scrie pe ecran simbolul ":" intre ore si minute
+    tft.drawNumber(Minute,40,5);                                                //Se afiseaza pe ecran minutul
+
+    SenzorMQ2();                                                                //Cheama bucla SenzorMQ2    // Se citesc
+    SenzorBME280();                                                             //Cheama bucla BME280       // valorile.
+
+    if (BuzzerOn) BuzzerOn = false;                                             // Se inverseazaza o data pe secunda starea variabilei ce determina buzzerul sa sune, 
+    else BuzzerOn = true;                                                       //                    ca sa ceeeze un efect sonor de clipire.
+
+  
 
 
 // HOME //
@@ -238,7 +276,7 @@ void loop() {
 
       tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-      if (Temperatura>=30&&BuzzerOn) {   
+      if (Temperatura>=LimitaT&&BuzzerOn) {   
           digitalWrite(25, HIGH);
           tft.setTextColor(TFT_RED, TFT_BLACK);  
       } 
@@ -246,32 +284,25 @@ void loop() {
         digitalWrite(25, LOW);
       }
        
-        tft.drawString("Temperatura", 10, 80, 4);  
+          
         tft.fillRect(240, 80, 80, 20, TFT_BLACK); // x, y, w, h, color 
         tft.drawFloat(Temperatura, 2, 240, 80, 4);  
-        tft.drawString("*C", 360, 80, 4);
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
       
-        if (Umiditate>=65&&BuzzerOn) {
+        if (Umiditate>=LimitaU&&BuzzerOn) {
          digitalWrite(25, HIGH);
         tft.setTextColor(TFT_RED, TFT_BLACK);
       }    
-
-        tft.drawString("Umiditate", 10, 120, 4);   
+  
         tft.drawFloat(Umiditate, 2, 240, 120, 4);  
-        tft.drawString("%", 360, 120, 4);
+        
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-
-        tft.drawString("Presiune", 10, 160, 4); 
         tft.fillRect(240, 160, 100, 20, TFT_BLACK); // x, y, w, h, color  
-        tft.drawFloat(Presiune, 2, 240, 160, 4);  
-        tft.drawString("hPa", 360, 160, 4);
-
-        tft.drawString("VOC", 10, 200, 4);
+        tft.drawFloat(Presiune, 2, 240, 160, 4);   
         tft.fillRect(240, 200, 120, 20, TFT_BLACK); // x, y, w, h, color   
         tft.drawFloat(ConcentratieGaz, 2, 240, 200, 4);
-        tft.drawString("PPM", 360, 200, 4); 
+         
 
     }
 // HOME //
@@ -282,25 +313,14 @@ void loop() {
 
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-        tft.drawString("Temperatura Min.", 10, 80, 4); 
         tft.fillRect(240, 80, 80, 20, TFT_BLACK); // x, y, w, h, color   
         tft.drawFloat(tmin, 2, 240, 80, 4);  
-        tft.drawString("*C", 360, 80, 4); 
-
-        tft.drawString("Umiditate Min.", 10, 120, 4);   
         tft.drawFloat(umin, 2, 240, 120, 4);  
-        tft.drawString("%", 360, 120, 4);
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);
-
-        tft.drawString("Presiune Min.", 10, 160, 4);  
         tft.fillRect(240, 160, 100, 20, TFT_BLACK); // x, y, w, h, color  
         tft.drawFloat(pmin, 2, 240, 160, 4);  
-        tft.drawString("hPa", 360, 160, 4);
- 
-        tft.drawString("VOC Min.", 10, 200, 4);  
         tft.fillRect(240, 200, 120, 20, TFT_BLACK); // x, y, w, h, color  
         tft.drawFloat(VOCmin, 2, 240, 200, 4);  
-        tft.drawString("PPM", 360, 200, 4);
+        
 }
 // MINIM //
 
@@ -310,30 +330,54 @@ void loop() {
 
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-        tft.drawString("Temperatura Max.", 10, 80, 4);   
-        tft.fillRect(240, 80, 80, 20, TFT_BLACK); // x, y, w, h, color 
-        tft.drawFloat(tmax, 2, 240, 80, 4);  
-        tft.drawString("*C", 360, 80, 4); 
-                
-        tft.drawString("Umiditate Max.", 10, 120, 4);   
-        tft.drawFloat(umax, 2, 240, 120, 4);  
-        tft.drawString("%", 360, 120, 4);
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);
-
-        tft.drawString("Presiune Max.", 10, 160, 4); 
-        tft.fillRect(240, 160, 100, 20, TFT_BLACK); // x, y, w, h, color   
-        tft.drawFloat(pmax, 2, 240, 160, 4);  
-        tft.drawString("hPa", 360, 160, 4);
         
-        tft.drawString("VOC Max.", 10, 200, 4);  
+        tft.fillRect(240, 80, 80, 20, TFT_BLACK); // x, y, w, h, color 
+        tft.drawFloat(tmax, 2, 240, 80, 4);   
+        tft.drawFloat(umax, 2, 240, 120, 4);    
+        tft.fillRect(240, 160, 100, 20, TFT_BLACK); // x, y, w, h, color   
+        tft.drawFloat(pmax, 2, 240, 160, 4);       
         tft.fillRect(240, 200, 120, 20, TFT_BLACK); // x, y, w, h, color  
         tft.drawFloat(VOCmax, 2, 240, 200, 4);  
-        tft.drawString("PPM", 360, 200, 4);
+        
 } 
 // MAXIME //  
 
+// SETARI //
+      if(Menu==4){
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.fillRect(120, 130, 240, 100, TFT_BLACK); // x, y, w, h, color
 
-        if(Menu==4){}//build in progress   //meniu setari
+
+        if(VariabilaSelectata == 1){
+          tft.textdatum = TC_DATUM;
+          tft.drawString("Ore", 240, 210, 4);
+          tft.drawNumber(Ore, 240, 135);
+          tft.textdatum = TL_DATUM;
+        }
+
+        if(VariabilaSelectata == 2){
+          tft.textdatum = TC_DATUM;
+          tft.drawString("Minute", 240, 210, 4);
+          tft.drawNumber(Minute, 240, 135);
+          tft.textdatum = TL_DATUM;
+        }
+
+        if(VariabilaSelectata == 3){
+          tft.textdatum = TC_DATUM;
+          tft.drawString("Alerta Temperatura", 240, 210, 4);
+          tft.drawNumber(LimitaT, 240, 135);
+          tft.textdatum = TL_DATUM;
+        }
+
+        if(VariabilaSelectata == 4){
+          tft.textdatum = TC_DATUM;
+          tft.drawString("Alerta Umiditate", 240, 210, 4);
+          tft.drawNumber(LimitaU, 240, 135);
+          tft.textdatum = TL_DATUM;
+        }
+
+}
+// SETARI //
         
     }//   SFARSIT Bucla de 1 secunda   // 
 }//   SFARSIT VOID LOOP   //
@@ -405,30 +449,98 @@ void loop() {
     ActualizareMeniu = true;                                //Actualizare fortata ecran
 
       if (key[1].justPressed() && Menu != 1) {              //Daca butonul 1 este apasat si nu suntem in meniul 1 ("HOME") se ruleaza↓
-        key[1].press(false);                                //Se afiseaza butonul 1 cu culorile textului si a fundalului inversate
+        key[1].press(false);                                //Se schimba starea butonului 1 la ne-apasata
         Menu=1;// HOME //                                   //Se seteaza variabila Menu la 1, corespunde meniului 1("HOME")
         Meniu1();                                           //Se afiseaza meniul 1("HOME")
       }
 
 
       if (key[2].justPressed() && Menu != 2) {              //Daca butonul 2 este apasat si nu suntem in meniul 2 ("MINIM") se ruleaza↓
-        key[2].press(false);                                //Se afiseaza butonul 2 cu culorile textului si a fundalului inversate
+        key[2].press(false);                                //Se schimba starea butonului 2 la ne-apasata
         Menu=2;// MINIM //                                  //Se seteaza variabila Menu la 2, corespunde meniului 2("MINIM")
         Meniu2();                                           //Se afiseaza meniul 2("MINIM")
       }
 
 
       if (key[3].justPressed() && Menu != 3) {              //Daca butonul 3 este apasat si nu suntem in meniul 3 ("MAXIM") se ruleaza↓
-        key[3].press(false);                                //Se afiseaza butonul 3 cu culorile textului si a fundalului inversate
+        key[3].press(false);                                //Se schimba starea butonului 3 la ne-apasata
         Menu=3;// MAXIM //                                  //Se seteaza variabila Menu la 3, corespunde meniului 3("MAXIM")
         Meniu3();                                           //Se afiseaza meniul 3("MAXIM")
       }
 
 
       if (key[4].justPressed() && Menu != 4) {              //Daca butonul 4 este apasat si nu suntem in meniul 4 ("SETARI") se ruleaza↓
-        key[4].press(false);                                //Se afiseaza butonul 4 cu culorile textului si a fundalului inversate
+        key[4].press(false);                                //Se schimba starea butonului 4 la ne-apasata
         Menu=4;// SETARI //                                 //Se seteaza variabila Menu la 4, corespunde meniului 4("SETARI")
         Meniu4();                                           //Se afiseaza meniul 4("SETARI")
+      }
+
+      if (key[5].justPressed()) { 
+            key[5].press(false);                            //Se schimba starea butonului 5 la ne-apasata      
+
+               if(VariabilaSelectata == 1)
+               {
+                 Ore--;  
+                 if(Ore<0)Ore = 23;
+               }
+
+               if(VariabilaSelectata == 2)
+               {
+                 Minute--;  
+                 if(Minute<0)Minute = 59;
+               }
+
+               if(VariabilaSelectata == 3)
+               {
+                 LimitaT--;  
+                 if(LimitaT<0)LimitaT = 45;
+               }
+
+               if(VariabilaSelectata == 4)
+               {
+                 LimitaU--;  
+                 if(LimitaU<0)LimitaU = 90;
+               }
+      }
+
+      if (key[6].justPressed()) {    
+            key[6].press(false);                             //Se schimba starea butonului 6 la ne-apasata      
+
+              if(VariabilaSelectata == 1)
+               {
+                 Ore++;  
+                 if(Ore>23)Ore =0;
+               }
+
+               if(VariabilaSelectata == 2)
+               {
+                 Minute++;  
+                 if(Minute>59)Minute = 0;
+               }
+
+               if(VariabilaSelectata == 3)
+               {
+                 LimitaT++;  
+                 if(LimitaT>45)LimitaT = 0;
+               }
+
+               if(VariabilaSelectata == 4)
+               {
+                 LimitaU++;  
+                 if(LimitaU>90)LimitaU = 0;
+               }
+      }
+
+      if (key[7].justPressed()) {    
+            key[7].press(false);                             //Se schimba starea butonului 7 la ne-apasata          
+            VariabilaSelectata--;   
+            if(VariabilaSelectata<1)VariabilaSelectata = 4;
+      }
+
+      if (key[8].justPressed()) {    
+            key[8].press(false);                             //Se schimba starea butonului 8 la ne-apasata          
+            VariabilaSelectata++;   
+            if(VariabilaSelectata>4)VariabilaSelectata = 1;
       }
   }
 
@@ -453,6 +565,17 @@ void loop() {
     key[2].drawButton();                               //Afiseaza butonul"Minim"
     key[3].drawButton();                               //Afiseaza butonul"Maxim"
     key[4].drawButton();                               //Afiseaza butonul"Setari"
+
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    tft.drawString("Temperatura", 10, 80, 4);
+    tft.drawString("*C", 360, 80, 4);
+    tft.drawString("Umiditate", 10, 120, 4);
+    tft.drawString("%", 360, 120, 4); 
+    tft.drawString("Presiune", 10, 160, 4); 
+    tft.drawString("hPa", 360, 160, 4);
+    tft.drawString("VOC", 10, 200, 4);
+    tft.drawString("PPM", 360, 200, 4);
   }
 
   void Meniu2() {
@@ -461,6 +584,18 @@ void loop() {
     key[2].drawButton(true);                           //Afiseaza butonul"Minim"
     key[3].drawButton();                               //Afiseaza butonul"Maxim"
     key[4].drawButton();                               //Afiseaza butonul"Setari"
+
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    tft.drawString("Temperatura Min.", 10, 80, 4);
+    tft.drawString("*C", 360, 80, 4);
+    tft.drawString("Umiditate Min.", 10, 120, 4); 
+    tft.drawString("%", 360, 120, 4);
+    tft.drawString("Presiune Min.", 10, 160, 4); 
+    tft.drawString("hPa", 360, 160, 4); 
+    tft.drawString("VOC Min.", 10, 200, 4);
+    tft.drawString("PPM", 360, 200, 4); 
+ 
   }
 
   void Meniu3() {
@@ -469,6 +604,17 @@ void loop() {
     key[2].drawButton();                               //Afiseaza butonul"Minim"
     key[3].drawButton(true);                           //Afiseaza butonul"Maxim"
     key[4].drawButton();                               //Afiseaza butonul"Setari"
+
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    tft.drawString("Temperatura Max.", 10, 80, 4);
+    tft.drawString("*C", 360, 80, 4);
+    tft.drawString("Umiditate Max.", 10, 120, 4);
+    tft.drawString("%", 360, 120, 4);
+    tft.drawString("Presiune Max.", 10, 160, 4);
+    tft.drawString("hPa", 360, 160, 4);
+    tft.drawString("VOC Max.", 10, 200, 4);
+    tft.drawString("PPM", 360, 200, 4);
   }
 
   void Meniu4() {
@@ -478,4 +624,10 @@ void loop() {
     key[2].drawButton();                               //Afiseaza butonul"Minim"
     key[3].drawButton();                               //Afiseaza butonul"Maxim"
     key[4].drawButton(true);                           //Afiseaza butonul"Setari"
+
+    key[5].drawButton();                               //Afiseaza butonul"-"
+    key[6].drawButton();                               //Afiseaza butonul"+"
+
+    key[7].drawButton();                               //Afiseaza butonul"<"
+    key[8].drawButton();                               //Afiseaza butonul">"
   } 
