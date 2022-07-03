@@ -198,20 +198,9 @@ void setup() {
   ThingSpeak.begin(client);  // Initialize ThingSpeak
   WiFi.begin(ssid, pass);  // Connect to WPA/WPA2 network. Change this line if using open or WEP network-
 
-  //Se citesc valorile de la senzorul extern(de pe platforma ThingSpeak), acest proces dureaza, se foloseste ca un delay pentru ca splash-ul sa stea afisat o durata de timp
-  ETemp = ThingSpeak.readFloatField(1748573, 1);
-  if (ETemp > ETempMax)ETempMax = ETemp;
-  if (ETemp < ETempMin)ETempMin = ETemp;
-
-  EUmid = ThingSpeak.readFloatField(1748573, 2);
-  if (EUmid > EUmidMax)EUmidMax = EUmid;
-  if (EUmid < EUmidMin)EUmidMin = EUmid;
-
-  EPres = ThingSpeak.readFloatField(1748573, 3);
-  if (EPres > EPresMax)EPresMax = EPres;
-  if (EPres < EPresMin)EPresMin = EPres;
-
   //THINGSPEAK//
+
+  delay(3000);
 
   /*<<<<<<<<<<<<<<<<<<<<OTA>>>>>>>>>>>>>>>>>>>>*/
 
