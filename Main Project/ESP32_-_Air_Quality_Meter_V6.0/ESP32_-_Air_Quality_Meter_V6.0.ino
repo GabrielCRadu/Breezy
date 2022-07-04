@@ -121,7 +121,7 @@ const int analog_pin = 33;
 float CPraf;
 float CPrafMin = 10000;
 float CPrafMax;
-int LimitaPraf = 400;
+float LimitaPraf = 0.1;
 //Senzor praf//
 
 //Senzor Auxiliar//
@@ -478,7 +478,7 @@ void loop() {
         tft.textdatum = TL_DATUM;
       }//if(SursaSelectata==2)
     }
-    if ((Temperatura >= LimitaT || Umiditate >= LimitaU || (VOCvalue > LimitaVOC && TimpIncalzireMQ2 < millis())) && SoundOn) digitalWrite(buzzer, HIGH);
+    if ((Temperatura >= LimitaT || Umiditate >= LimitaU || (VOCvalue > LimitaVOC && TimpIncalzireMQ2 < millis()) || CPraf > LimitaPraf) && SoundOn) digitalWrite(buzzer, HIGH);
     else digitalWrite(buzzer, LOW);
 
     // HOME //
@@ -546,7 +546,7 @@ void loop() {
         tft.drawFloat(VOCmax, 2, 240, ypos4, 4);
 
         tft.fillRect(180, ypos5, 120, 20, TFT_BLACK);
-        tft.drawFloat(CPrafMin, 3, 240, ypos5, 4);
+        tft.drawFloat(CPrafMax, 3, 240, ypos5, 4);
 
         tft.textdatum = TL_DATUM;
       }
@@ -572,7 +572,7 @@ void loop() {
     // SETARI //
     if (Menu == 4) {                                                  //Cand meniul 4"SETARI" este selectat
       tft.setTextColor(TFT_WHITE, TFT_BLACK);                         //Se seteaza initial culoarea textului la alb cu fundal negru
-      tft.fillRect(55, 130, 370, 100, TFT_BLACK);                    //Se face refresh la mijlocul ecranului unde sunt afisate valori, nume variabile selectate
+      tft.fillRect(55, 130, 370, 100, TFT_BLACK);                     //Se face refresh la mijlocul ecranului unde sunt afisate valori, nume variabile selectate
 
 
       if (VariabilaSelectata == 0) {                                  //Valoarea 0 a VariabilaSelectata corespunde variabilei ce retine numarul indicator al sursei active
@@ -617,9 +617,16 @@ void loop() {
         tft.textdatum = TL_DATUM;                                     //Se schimba alinierea textului la Top_Left(se scrie de sus in jos, de la stanga spre dreapta fata de coordonata data)
       }
 
-      if (VariabilaSelectata == 6) {                                 //Valoarea 6 a VariabilaSelectata corespunde setarii valorii la care alerta de Compusi Organici Volatili se declanseaza
+      if (VariabilaSelectata == 6) {                                  //Valoarea 5 a VariabilaSelectata corespunde setarii valorii la care alerta de Compusi Organici Volatili se declanseaza
         tft.textdatum = TC_DATUM;                                     //Se schimba alinierea textului la Top_Centre(se scrie de sus in jos, centrat pe orizontala fata de coordonata data)
-        tft.drawString("Scriere/Citire ThingSpeak", 240, 195, 4);                          //Se scrie pe ecran ce variabila se modifica (Alerta VOC)
+        tft.drawString("Alerta Praf", 240, 195, 4);                   //Se scrie pe ecran ce variabila se modifica (Alerta VOC)
+        tft.drawFloat(LimitaPraf, 2, 240, 130, 4);                    //Se afiseaza valoarea setata a alertei
+        tft.textdatum = TL_DATUM;                                     //Se schimba alinierea textului la Top_Left(se scrie de sus in jos, de la stanga spre dreapta fata de coordonata data)
+      }
+
+      if (VariabilaSelectata == 7) {                                  //Valoarea 6 a VariabilaSelectata corespunde setarii valorii la care alerta de Compusi Organici Volatili se declanseaza
+        tft.textdatum = TC_DATUM;                                     //Se schimba alinierea textului la Top_Centre(se scrie de sus in jos, centrat pe orizontala fata de coordonata data)
+        tft.drawString("Scriere/Citire ThingSpeak", 240, 195, 4);     //Se scrie pe ecran ce variabila se modifica (Alerta VOC)
 
         if (TSOn) {
           tft.setTextColor(TFT_GREEN, TFT_BLACK);
@@ -698,7 +705,7 @@ void Senzor_Praf() {  // ecuatia de calcul luata de pe: http://www.howmuchsnow.c
     */
 
 
-    // culc dust density
+    // calc dust density
     CPraf += (0.172 * (mesured * (3.3 / 4096)) ); // (0.17 * (valoare masurata * (tensiune intrare / numar biti)) - 0.1) * 1000.;
     //if ( CPraf < 0 )  CPraf = 0.;
   } CPraf /= 5;
@@ -861,6 +868,12 @@ void Butoane() {                                          //Bucla ce se ocupa cu
 
     if (VariabilaSelectata == 6)
     {
+      LimitaPraf -= 0.05;
+      if (LimitaPraf < 0.05)LimitaPraf = 1;
+    }
+
+    if (VariabilaSelectata == 7)
+    {
       TSOn = false;
     }
   }
@@ -908,6 +921,12 @@ void Butoane() {                                          //Bucla ce se ocupa cu
 
     if (VariabilaSelectata == 6)
     {
+      LimitaPraf += 0.05;
+      if (LimitaPraf > 1)LimitaPraf = 0.05;
+    }
+
+    if (VariabilaSelectata == 7)
+    {
       TSOn = true;
     }
   }
@@ -917,7 +936,7 @@ void Butoane() {                                          //Bucla ce se ocupa cu
     ActualizareMeniu = true;                         //Actualizare fortata ecran
 
     VariabilaSelectata--;
-    if (VariabilaSelectata < 0)VariabilaSelectata = 6;
+    if (VariabilaSelectata < 0)VariabilaSelectata = 7;
   }
 
   if (key[8].justPressed() && Menu == 4) {               //Daca se apasa butonul 8(>) si suntem in meniul 4 "SETARI" se schimba in cealalta directie variabila selectata
@@ -925,7 +944,7 @@ void Butoane() {                                          //Bucla ce se ocupa cu
     ActualizareMeniu = true;                         //Actualizare fortata ecran
 
     VariabilaSelectata++;
-    if (VariabilaSelectata > 6)VariabilaSelectata = 0;
+    if (VariabilaSelectata > 7)VariabilaSelectata = 0;
   }
 }
 
