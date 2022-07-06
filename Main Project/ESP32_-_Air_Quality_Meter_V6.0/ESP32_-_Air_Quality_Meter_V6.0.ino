@@ -988,8 +988,9 @@ void Meniu1() {                                      //In meniul 1 "HOME"↓
     tft.drawString("VOC", 10, ypos4, 4);
     tft.drawString("PPM", 360, ypos4, 4);
 
-    tft.drawString("Praf", 10, ypos5, 4);
-    tft.drawString("mg/m^3", 360, ypos5, 4);
+    tft.drawString("C. Praf", 10, ypos5, 4);
+    tft.drawString("mg/m", 360, ypos5, 4);
+    tft.drawString("3", 430, ypos5 - 5, 2);
   }
 
 }
@@ -1018,8 +1019,9 @@ void Meniu2() {                                      //In meniul 2 "MINIME"↓
     tft.drawString("VOC Min", 10, ypos4, 4);
     tft.drawString("PPM", 360, ypos4, 4);
 
-    tft.drawString("Praf Min", 10, ypos5, 4);
-    tft.drawString("mg/m^3", 360, ypos5, 4);
+    tft.drawString("C. Praf Min", 10, ypos5, 4);
+    tft.drawString("mg/m", 360, ypos5, 4);
+    tft.drawString("3", 430, ypos5 - 5, 2);
   }
 
 }
@@ -1048,8 +1050,9 @@ void Meniu3() {                                      //In meniul 2 "MAXIME"↓
     tft.drawString("VOC Max", 10, ypos4, 4);
     tft.drawString("PPM", 360, ypos4, 4);
 
-    tft.drawString("Praf Max", 10, ypos5, 4);
-    tft.drawString("mg/m^3", 360, ypos5, 4);
+    tft.drawString("C. Praf Max", 10, ypos5, 4);
+    tft.drawString("mg/m", 360, ypos5, 4);
+    tft.drawString("3", 430, ypos5 - 5, 2);
   }
 
 }
