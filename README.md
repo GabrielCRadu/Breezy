@@ -16,6 +16,7 @@
 - 🔄 Afișare dinamică a valorilor și salvare automată a min/max
 - 📈 Calcule de altitudine și conversie automată a unităților de presiune
 - 🌐 Serviciu IoT pentru control și vizualizare la distanță
+- 📱 Aplicație de mobil ce permite afișarea valorilor în timp real de pe cele două module
 
 ---
 
@@ -48,7 +49,6 @@
 
 - Vizualizare în timp real a valorilor senzorilor
 - Reacții automate la depășirea pragurilor (ex: alarme)
-- Generare statistici: min/max, calificative aer (ex: scor de la 0 la 10)
 - Posibilitate extindere: sistem de alertă GSM, server web, control ESP-NOW
 
 ---
