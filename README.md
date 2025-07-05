@@ -1,91 +1,95 @@
 
-# 🌬️ Breezy – Air Quality Monitor
+# 🌬️ Breezy - Monitor de Calitate a Aerului
 
-**Breezy** este un dispozitiv hardware portabil care monitorizează în timp real calitatea aerului, oferind utilizatorului informații esențiale despre atmosferă și avertismente în cazuri periculoase (ex: potențial de asfixiere).
+**Breezy Air** este un dispozitiv IoT portabil creat pentru a monitoriza calitatea aerului în spații interioare, oferind utilizatorului informații în timp real despre parametrii esențiali ai atmosferei și avertismente sonore/luminoase în situații critice.
 
-> Realizat ca proiect educațional în clasa a IX-a, cu scopul de a crește conștientizarea asupra sănătății respiratorii și a mediului.
+> Proiect educațional dezvoltat în clasa a IX-a, cu scopul de a promova sănătatea respiratorie și utilizarea tehnologiilor embedded în viața de zi cu zi.
 
 ---
 
 ## 📦 Funcționalități principale
 
-- 📊 Măsurarea temperaturii, umidității și presiunii atmosferice  
-- 🧪 Detectarea compușilor volatili (VOC): CO, metan, fum, alcool etc.  
-- 🔔 Sistem de alarme sonore în caz de depășire a limitelor sigure  
-- 🖥️ Interfață grafică pe ecran TFT 480x320  
-- ⚙️ Meniu de setări pentru praguri de alarmă și preferințe  
-- 🔄 Actualizare automată a valorilor în timp real (buclă la 1 sec / 1 min)
+- 📊 Măsurare: temperatură, umiditate, presiune atmosferică, concentrație de gaze (VOC), praf
+- 📡 Transmisie date către platforma IoT ThingSpeak
+- 🔔 Alarme sonore și luminoase în cazuri de depășire a pragurilor critice
+- 🖥️ Interfață grafică pe ecran TFT (480x320px), cu meniuri interactive și butoane touch
+- 🔄 Afișare dinamică a valorilor și salvare automată a min/max
+- 📈 Calcule de altitudine și conversie automată a unităților de presiune
+- 🌐 Serviciu IoT pentru control și vizualizare la distanță
 
 ---
 
-## 🛠️ Hardware
+## 🛠️ Componente Hardware
 
-| Componentă       | Descriere                                                                 |
-|------------------|---------------------------------------------------------------------------|
-| **WT32-SC01**     | ESP32 cu ecran TFT integrat (480x320px), interfață tactilă               |
-| **BME280**        | Senzor de temperatură, presiune și umiditate (precizie ridicată, I2C)    |
-| **MQ-2**          | Senzor de gaze (VOC, CO, metan, fum etc.)                                |
-| **Buzzer**        | Emite alarme sonore în cazuri critice                                    |
-| **Breadboard**    | Montare experimentală a circuitului                                       |
-
----
-
-## 💻 Software
-
-- Scris în C++ pentru **platforma Arduino**  
-- Afișare pe TFT folosind librăria `TFT_eSPI`  
-- Citire și procesare date de la senzori  
-- Meniuri interactive + setări cu butoane (navigare, praguri alarmă)  
-- Structuri logice: `loop()`, `setup()`, bucle controlate pe timp
+| Componentă          | Descriere                                                                 |
+|---------------------|---------------------------------------------------------------------------|
+| **WT32-SC01**        | ESP32 cu touchscreen TFT 480x320px                                        |
+| **BME280**           | Măsoară temperatură, umiditate, presiune (precizie 0.03 hPa)              |
+| **MQ-2**             | Senzor gaze inflamabile (CO, metan, alcool, etc.)                         |
+| **GP2Y1010AU0F**     | Senzor de praf optic – detectează particule în suspensie                  |
+| **Buzzer**           | Semnal sonor în caz de pericol                                            |
+| **LED-uri**          | Semnalizare vizuală pentru evenimente critice                            |
+| **Breadboard**       | Asamblare modulară rapidă                                                 |
+| **WeMos D1 mini**    | ESP8266 cu WiFi – conectare la ThingSpeak                                |
 
 ---
 
-## 📷 Imagini
+## 💻 Software și Librării
 
-> *(Adaugă aici capturi de ecran sau fotografii ale prototipului în funcțiune)*
+- **Limbaj:** C++ (Arduino)
+- **Platforme:** Arduino IDE, ThingSpeak
+- **Librării:**  
+  - `TFT_eSPI`, `FT62XXTouchScreen`, `Free_Fonts`  
+  - `MQUnifiedsensor`, `Adafruit_BME280`, `ThingSpeak`
 
 ---
 
-## 📈 Exemple de funcții importante
+## ☁️ Funcționalități IoT (ThingSpeak)
+
+- Vizualizare în timp real a valorilor senzorilor
+- Reacții automate la depășirea pragurilor (ex: alarme)
+- Generare statistici: min/max, calificative aer (ex: scor de la 0 la 10)
+- Posibilitate extindere: sistem de alertă GSM, server web, control ESP-NOW
+
+---
+
+## 🧠 Exemple de funcții
 
 ```cpp
-void loop() {
-  // Actualizare date senzori
-  temperatura = bme.readTemperature();
-  presiune = bme.readPressure();
-  voc = MQ2.readSensor();
-
-  // Afișare pe ecran
-  tft.drawFloat(temperatura, 1, 240, 60, 4);
-
-  // Alerte
-  if (temperatura > prag_temperatura_max) {
-    digitalWrite(buzzerPin, HIGH);
-  }
+if (temperature > thresholdTemp) {
+  digitalWrite(buzzerPin, HIGH);
+  digitalWrite(ledRed, HIGH);
 }
+```
+
+```cpp
+float pressure_hPa = bme.readPressure() / 100.0;
+float pressure_mmHg = pressure_hPa * 0.75006;
 ```
 
 ---
 
 ## 🔮 Dezvoltări viitoare
 
-- Integrare senzor praf (PM2.5)  
-- Versiune portabilă cu baterie Li-ion și carcasă 3D  
-- Salvare date în memorie și analiză istorică  
-- Integrare cu aplicație mobilă via Wi-Fi/Bluetooth
+- Versiune portabilă cu baterie Li-ion
+- Sistem GSM pentru alerte remote
+- Integrare senzor ploaie (agricultură)
+- Server web cu dashboard HTML
+- Clasificare a calității aerului pe bază de scor
+- Casă inteligentă (ESP-NOW)
 
 ---
 
 ## 👨‍💻 Autori
 
-- **Radu Gabriel Claudiu** – dezvoltare hardware & software  
-- **Trîmbițaș George Bogdan** – UI și design meniuri  
-- **Prof. Humeniuc Ramona** – coordonator proiect
+- **Radu Gabriel Claudiu** – programare, integrare senzori, logică alarme  
+- **Trîmbițaș George Bogdan** – interfață grafică, meniuri, testare  
+- **Prof. Ramona Humeniuc** – coordonare tehnică, suport fizică & IoT
 
 ---
 
 ## 📜 Licență
 
-Proiect educațional open-source – disponibil sub licență MIT.
+Proiect educațional open-source – licență MIT.
 
 ---
